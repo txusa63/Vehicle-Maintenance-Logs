@@ -1,0 +1,30 @@
+{
+  "name": "vehicle-maintenance-logs",
+  "version": "1.0.0",
+  "description": "An app that keeps track of the logs of drivers and associated vehicles.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "client-install": "npm install --prefix client",
+    "client": "npm start --prefix client",
+    "start": "node server.js",
+    "server": "nodemon server.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client"
+  },
+  "author": "DJ",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "concurrently": "^5.3.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.10.6",
+    "nodemailer": "^6.4.13"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
