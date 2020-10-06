@@ -9,6 +9,8 @@ The logs appear as a list of buttons. Each button is clickable and once clicked,
 
 Each employee can see his/her own logs. The admin can see all of the information available to all users. 
 
+The app uses route protection and if an unauthorized user tries to manually enter the route to the page where the todos are located, the app will always redirect the user to the login page.
+
 # Available Scripts
 In the project directory, you can run:
 
