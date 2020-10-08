@@ -1,15 +1,3 @@
-/*
-  This app should keep track of the maintenance logs of all
-  vehicles available.
-  If some data is missing, an email is sent to the driver 
-  to inform him/her of the issue.
-  Each driver can only see his/her own logs for the vehicle
-  assigned.
-  The admin can see all of the logs. 
-  The admin will receive an email if general data is 
-  missing, etc and the driver never updated or resolved 
-  the issue. 
-*/
 import React, {Fragment, useState, useEffect} from 'react';
 import axios from 'axios';
 import UserContext from './context/UserContext';
