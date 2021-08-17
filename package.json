@@ -2,7 +2,7 @@
   "name": "vehicle-maintenance-logs",
   "version": "1.0.0",
   "description": "An app that keeps track of the logs of drivers and associated vehicles.",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "client-install": "npm install --prefix client",
