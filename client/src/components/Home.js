@@ -1,51 +1,33 @@
-import React, {useEffect, useContext} from 'react';
-import axios from 'axios';
-import {useHistory} from 'react-router-dom';
-import {Container} from 'reactstrap';
-import UserContext from '../context/UserContext';
-import FormModal from './FormModal'
-import Logs from './Logs';
+import React, { useContext, useEffect } from 'react'
+import { useHistory } from 'react-router-dom'
+import AuthContext from '../context/AuthContext';
 
-export default function Home() {
-    const {users, logs} = useContext(UserContext);
-    const [userValue] = users;
-    const [logsValue, setLogsValue] = logs;
-
+export const Home = () => {
     const history = useHistory();
+    const {user} = useContext(AuthContext);
 
     useEffect(() => {
-        if(!userValue.user) {
-            history.push('/login');
-        }
+        checkStatus()
+    }, [user])
 
-        else {
-            if(!logsValue.logs) {
-                const loadLogs = async () => {
-                    const role = userValue.user['role'];
-                    let logsResponse;
-                    if(role === 'ADMINISTRATOR' || role === 'ADMIN') {
-                        logsResponse = await axios.get('/logs/adminAll');
-                    }
-                    else {
-                        logsResponse = await axios.get('/logs/usersAll', {headers: {'x-auth-token': userValue.token}});
-                    }
-                    if(logsResponse.data.length !== 0) {
-                        setLogsValue({
-                            logs: logsResponse.data
-                        })
-                    }
+    const checkStatus = () => {
+        if(user !== undefined) {
+            if(Object.entries(user).length !== 0) {
+                if(user.role === 'ADMIN') {
+                    history.push('/dashboard');
                 }
-                loadLogs();
+                if(user.role === 'EMPLOYEE') {
+                    history.push('/logs/employee')
+                }
+            }
+            else {
+                history.push('/login')
             }
         }
-    },[]);
-
+    }
     return (
-        <div>
-            <Container>
-                <FormModal />
-                <Logs />
-            </Container>
-        </div>
+        <>
+            
+        </>
     )
 }

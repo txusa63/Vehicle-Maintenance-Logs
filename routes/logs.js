@@ -1,28 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Log = require('../models/log_model');
+const Log = require('../models/Log');
 
-// @route       POST api/logs
-// @desc        Create a log and save to database
-// @access      Private
 router.post('/', auth, async (req, res) => {
     try {
-        const {brandName, modelName, mileage, oilChanged, brakesChecked, lightsChecked, anyDamages} = req.body;
+        const {brandName, modelName, modelYear, modelColor, mileage, oilChanged, brakesChecked, lightsChecked, anyDamages, extraInformation} = req.body;
 
-        if(!brandName || !modelName || !mileage || !oilChanged || !brakesChecked || !lightsChecked || !anyDamages) {
+        if(!brandName || !modelName || !mileage || !modelYear || !modelColor ) {
             return res.status(400).json({msg: 'Not all fields have been entered...'});
         }
 
         const newLog = new Log({
             userId: req.user,
             brandName, 
-            modelName, 
+            modelName,
+            modelYear,
+            modelColor,
             mileage, 
             oilChanged, 
             brakesChecked, 
             lightsChecked, 
-            anyDamages
+            anyDamages,
+            extraInformation
         });
 
         const savedLog = await newLog.save();
@@ -30,26 +30,38 @@ router.post('/', auth, async (req, res) => {
     }
 
     catch(err) {
+        console.error(err);
         res.status(500).json({error: err.message});
-    }
+    };
 });
 
-// @route       GET api/logs/all
-// @desc        Get all logs associated with user
-// @access      Private
-router.get('/usersAll', auth, async (req, res) => {
-    const logs = await Log.find({userId: req.user});
-    res.json(logs);
-});
 
-// @route       GET api/logs/admin
-// @desc        Get all logs from all users
-// @access      Public
-router.get('/adminAll', async (req, res) => {
-    const logs = await Log.find();
+router.get('/employees', auth, async (req, res) => {
+    const logs = await Log.find().sort({createdAt: 'desc'});
     res.json(logs);
 });
 
 
+router.get('/', auth, async (req, res) => {
+    const {role} = req.body;
+    const logs = await Log.find({userId: req.user}).sort({createdAt: 'desc'});
+    res.json(logs);
+});
+
+
+router.get('/:id', auth, async (req, res) => {
+    const log = await Log.findById(req.params.id);
+    res.json(log);
+});
+
+
+router.put('/update/:id', auth, async (req, res) => {
+    const {id} = req.params;
+    const {brandName, modelName, modelYear, modelColor, mileage, oilChanged, brakesChecked, lightsChecked, anyDamages, extraInformation} = req.body;
+
+    const updatedLog = {userId: req.user, _id: id, brandName, modelName, modelYear, modelColor, mileage, oilChanged, brakesChecked, lightsChecked, anyDamages, extraInformation};
+    await Log.findByIdAndUpdate(id, updatedLog)
+    res.json(updatedLog);
+})
 
 module.exports = router;

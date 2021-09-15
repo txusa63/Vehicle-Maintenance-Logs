@@ -1,19 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/user_model');
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const JWT = require('jsonwebtoken');
 const auth = require('../middleware/auth');
 
-// @route       POST api/users/register
-// @desc        Register new user
-// @access      Public
+
 router.post('/register', async (req, res) => {
     try {
-        let {firstName, lastName, email, password, passwordCheck, role, displayName} = req.body;
+        let {firstName, lastName, email, password, passwordCheck, role, displayName, gender} = req.body;
 
-        if(!firstName || !lastName || !email || !password || !passwordCheck || !role) {
-            return res.status(400).json({msg: 'Not all fields have been entered...'});
+        if(!firstName || !lastName || !email || !password || !passwordCheck || !role || !gender) {
+            return res.status(400).json({msg: 'Please enter all required fields'});
         }
         firstName = firstName.toUpperCase();
         lastName = lastName.toUpperCase();
@@ -23,10 +21,11 @@ router.post('/register', async (req, res) => {
         }
 
         if(password !== passwordCheck) {
-            return res.status(400).json({msg: 'The passwords did not match!'});
+            return res.status(400).json({msg: 'The given passwords did not match!'});
         }
 
         role = role.toUpperCase();
+        gender = gender.toUpperCase();
 
         const existingUser = await User.findOne({email: email})
         if(existingUser) {
@@ -34,7 +33,12 @@ router.post('/register', async (req, res) => {
         }
 
         if(!displayName) {
-            displayName = firstName + ' ' + lastName;
+            if(role === 'ADMIN') {
+                displayName = role
+            }
+            else {
+                displayName = firstName + ' ' + lastName;
+            }
         }
 
         const salt = await bcrypt.genSalt();
@@ -44,105 +48,160 @@ router.post('/register', async (req, res) => {
             firstName,
             lastName, 
             email,
-            password: passwordHash,
+            passwordHash,
             role,
-            displayName
+            displayName,
+            gender
         });
         const savedUser = await newUser.save();
-        res.json(savedUser);
+
+        const token = JWT.sign({user: savedUser._id}, process.env.JWT_SECRET);
+
+        res.cookie('token', token, {httpOnly: true, secure: true, sameSite: 'none'}).send();
     }
 
     catch(err) {
+        console.error(err);
         res.status(500).json({error: err.message});
     }
 });
 
-// @route       POST api/users/login
-// desc         Auth user and log in if auth successful
-// access       Public
+
 router.post('/login', async (req, res) => {
     try {
         const {email, password} = req.body;
 
         if(!email || !password) {
-            return res.status(400).json({msg: 'Not all fields have been entered'});
+            return res.status(400).json({msg: 'Please enter all required fields'});
         }
 
-        const user = await User.findOne({email: email});
-        if(!user) {
-            return res.status(400).json({msg: 'No account with this email exists'});
+        const existingUser = await User.findOne({email: email});
+        if(!existingUser) {
+            return res.status(401).json({msg: 'Wrong email and/or password'});
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, existingUser.passwordHash);
         if(!isMatch) {
-            return res.status(400).json({msg: 'Invalid credentials'});
+            return res.status(401).json({msg: 'Wrong email and/or password'});
         }
 
-        const token = JWT.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: 3600});
-        res.json({
-            token,
-            user: {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                displayName: user.displayName,
-                role: user.role
-            }
-        });
+        const token = JWT.sign({user: existingUser._id}, process.env.JWT_SECRET);
+
+        res.cookie('token', token, {httpOnly: true, secure: true, sameSite: 'none'}).send();
+
     }
 
     catch(err) {
+        console.error(err);
         res.status(500).json({error: err.message});
     }
 });
 
-// @route       POST api/users/isTokenValid
-// @desc        Test if the token is valid or not
-// @access      Public
-router.post('/isTokenValid', async (req, res) => {
+
+router.get('/isLoggedIn', (req, res) => {
     try {
-        const token = req.header('x-auth-token');
+        const token = req.cookies.token;
         if(!token) {
             return res.json(false);
         }
 
         const verified = JWT.verify(token, process.env.JWT_SECRET);
-        if(!verified) {
-            return res.json(false);
-        }
 
-        const user = await User.findById(verified.id);
-        if(!user) {
-            return res.json(false);
-        }
-
-        return res.json(true);
-    }
-
-    catch(err) {
-        res.status(500).json({error: err.message});
+        res.send(true);
+    } 
+    
+    catch (err) {
+        res.json(false)
     }
 });
 
-// @route       GET api/users/
-// @desc        Get user data
-// @access      Private
+router.get('/adminExists', async (req, res) => {
+    try {
+        const role = await User.findOne({role: 'ADMIN'});
+        if(!role) { 
+            return res.json(false)
+        }
+
+        res.send(true)
+    } 
+    
+    catch (err) {
+        res.json(false)
+    }
+})
+
+
+router.get('/logout', (req, res) => {
+    res.cookie('token', '', {httpOnly: true, expires: new Date(0), secure: true, sameSite: 'none'}).send()
+});
+
+// Check this out later
+router.get('/all', auth, async (req, res) => {
+    const users = await User.find();
+    res.json(users)
+});
+
+
 router.get('/', auth, async (req, res) => {
-    const user = await User.find(req.user);
-    res.json({
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        displayName: user.displayName,
-    })
-});
-
-router.get('/:id', async (req, res) => {
-    const user = await User.findOne({_id: req.params.id});
+    const user = await User.findOne({_id: req.user});
     if(!user) {
         return res.status(400).json({msg: 'No user found!'});
     }
     res.json(user);
+});
+
+
+router.get('/:id', async (req, res) => {
+    const user = await User.findById(req.params.id);
+    res.json(user);
+});
+
+
+router.put('/update/:id', async (req, res) => {
+    const {id} = req.params;
+
+    let {firstName, lastName, email, password, passwordCheck, role, displayName, gender} = req.body;
+    const currentEmail = email
+
+    if(!firstName || !lastName || !email || !password || !passwordCheck || !role || !gender) {
+        return res.status(400).json({msg: 'Please enter all required fields'});
+    }
+    firstName = firstName.toUpperCase();
+    lastName = lastName.toUpperCase();
+
+    if(password.length < 5) {
+        return res.status(400).json({msg: 'Password needs to be at least 5 characters long...'});
+    }
+
+    if(password !== passwordCheck) {
+        return res.status(400).json({msg: 'The given passwords did not match!'});
+    }
+
+    role = role.toUpperCase();
+    gender = gender.toUpperCase();
+
+    if(email !== currentEmail) {
+        const existingUser = await User.findOne({email: email})
+        if(existingUser) {
+            return res.status(400).json({msg: 'Account with this email already exists...'});
+        }
+    }
+
+    if(!displayName) {
+        if(role === 'ADMIN') {
+            displayName = role
+        }
+        else {
+            displayName = firstName + ' ' + lastName;
+        }
+    }
+
+    const salt = await bcrypt.genSalt();
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const updatedUser = {_id: id, firstName, lastName, email, passwordHash, role, displayName, gender};
+    await User.findByIdAndUpdate(id, updatedUser);
+    res.json(updatedUser);
 })
 
 

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const logSchema = new mongoose.Schema({
     userId: {
         type: String,
@@ -12,30 +13,39 @@ const logSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    modelYear: {
+        type: String,
+        required: true
+    },
+    modelColor: {
+        type: String,
+        required: true
+    },
     mileage: {
         type: String,
         required: true
     },
     oilChanged: {
-        type: String,
-        required: true
+        type: Boolean,
+        default: false
     },
     brakesChecked: {
-        type: String,
-        required: true
+        type: Boolean,
+        default: false
     },
     lightsChecked: {
-        type: String,
-        required: true
+        type: Boolean,
+        default: false
     },
     anyDamages: {
-        type: String,
-        required: true
+        type: Boolean,
+        default: false
     },
-    date: {
-        type: Date,
-        default: Date.now
+    extraInformation: {
+        type: String
     }
+}, {
+    timestamps: true
 });
 
 module.exports = Log = mongoose.model('log', logSchema);

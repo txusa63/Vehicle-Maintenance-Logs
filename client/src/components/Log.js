@@ -1,35 +1,40 @@
-import React, {useState, useEffect} from 'react'
-import {Collapse, Button, Card, CardBody} from 'reactstrap';
-import axios from 'axios';
+import React, { useContext, useState } from 'react'
+import { useHistory } from 'react-router-dom';
+import { Button, Card, CardBody, CardHeader, CardText, CardTitle, Collapse } from 'reactstrap'
+import AuthContext from '../context/AuthContext';
 
-export default function Log(props) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [userName, setUserName] = useState();
-   
-    const toggle = () => setIsOpen(!isOpen);
+export const Log = (props) => {
+    const {_id, brandName, modelName, modelYear, modelColor, mileage, oilChanged, brakesChecked, lightsChecked, anyDamages, extraInformation, createdAt} = props.log;
+    const [collapse, setCollapse] = useState(false);
+    const {push} = useHistory();
+    const {user} = useContext(AuthContext);
+    const date = new Date(createdAt);
 
-    useEffect(() => {
-        const getUserName = async (id) => {
-            const name = await axios.get('/users/'+id);
-            setUserName(name.data['displayName']);
-        }
-        getUserName(props.data['userId']);
-    });
+
+    const toggle = () => setCollapse(!collapse);
 
     return (
         <div>
-            <Button outline color='primary' onClick={toggle} className='btn-link' >{userName}</Button>
-            <Collapse isOpen={isOpen} >
-                <Card>
-                    <CardBody> 
-                        <p><strong>Vehicle Make</strong>: {props.data['brandName']}</p>
-                        <p><strong>Vehicle Model</strong>: {props.data['modelName']}</p>
-                        <p><strong>Vehicle Mileage</strong>: {Number(props.data['mileage']).toLocaleString() + ' mile(s)'}</p>
-                        <p><strong>Oil changed?</strong>: {props.data['oilChanged']}</p>
-                        <p><strong>Brakes Checked?</strong>: {props.data['brakesChecked']}</p>
-                        <p><strong>Lights Checked?</strong>: {props.data['lightsChecked']}</p>
-                        <p><strong>Any Extra Information to Add?</strong>: {props.data['anyDamages']}</p>
-                        <p><strong>Date of Log</strong>: {props.data['date']}</p>
+            <Button  color='primary' size='sm' block onClick={toggle} style={{marginTop: '1rem'}} >
+                {date.toLocaleString('en-US', {day:'numeric', month: 'long', year:'numeric'})}
+            </Button>
+            <Collapse isOpen={collapse}>
+                <Card outline color='secondary' >
+                    <CardHeader style={{textAlign: 'center', backgroundColor: 'silver'}}>
+                        <strong>Log ID:</strong> {_id} {user.role !== 'ADMIN' ? <Button size='sm' onClick={() => push('/logForm/' + _id)} >Edit Log</Button> : null}
+                    </CardHeader>
+                    <CardBody>
+                        <CardTitle></CardTitle>
+                        <CardText><strong>Brand Name: </strong>{brandName}</CardText>
+                        <CardText><strong>Model Name: </strong>{modelName}</CardText>
+                        <CardText><strong>Model Year: </strong>{modelYear}</CardText>
+                        <CardText><strong>Model Color: </strong>{modelColor}</CardText>
+                        <CardText><strong>Mileage: </strong>{Number(mileage).toLocaleString('en-US')}</CardText>
+                        <CardText><strong>Oil Changed? : </strong>{oilChanged === true ? 'Yes' : 'No'}</CardText>
+                        <CardText><strong>Brakes Checked? : </strong>{brakesChecked === true ? 'Yes' : 'No'}</CardText>
+                        <CardText><strong>Lights Checked? : </strong>{lightsChecked === true ? 'Yes' : 'No'}</CardText>
+                        <CardText><strong>Any Damages? : </strong>{anyDamages === true ? 'Yes' : 'No'}</CardText>
+                        <CardText><strong>Any Additional Information to Add/Include? : </strong>{extraInformation}</CardText>
                     </CardBody>
                 </Card>
             </Collapse>
