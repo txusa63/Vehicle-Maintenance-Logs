@@ -196,10 +196,16 @@ router.put('/update/:id', async (req, res) => {
         }
     }
 
-    const salt = await bcrypt.genSalt();
-    const passwordHash = await bcrypt.hash(password, salt);
+    const existingPassword = await User.findOne({passwordHash: password});
+    if(!existingPassword) {
+        const salt = await bcrypt.genSalt();
+        const passwordHash = await bcrypt.hash(password, salt);
+        const updatedUser = {_id: id, firstName, lastName, email, passwordHash, role, displayName, gender};
+        await User.findByIdAndUpdate(id, updatedUser);
+        res.json(updatedUser);
+    }
 
-    const updatedUser = {_id: id, firstName, lastName, email, passwordHash, role, displayName, gender};
+    const updatedUser = {_id: id, firstName, lastName, email, passwordHash: password, role, displayName, gender};
     await User.findByIdAndUpdate(id, updatedUser);
     res.json(updatedUser);
 })
