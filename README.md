@@ -3,6 +3,10 @@ A vehicle maintenance log system that uses authentication and authorization.
 
 Once an administrator account is created, that admin account is able to see all logs created by the other employees and also look at the profiles of all existing employee accounts. When no account is logged in, the app will direct you to the login page.
 
+Live Demo: https://vehicle-maintenance-app.herokuapp.com/
+
+
+Quick Demos:
 
 When the user logs in as admin, the app will take the user to the dashboard page:
 
