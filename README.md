@@ -53,10 +53,23 @@ The app under admin can see all changes that have been submitted since:
 https://user-images.githubusercontent.com/58760137/133529025-2d127d2b-2bb3-4297-8507-68e62c293c50.mov
 
 
-While any other non-admin user cannot see any changes occuring in other accounts:
+Any other non-admin user cannot see any changes occuring in other accounts:
+
+
+https://user-images.githubusercontent.com/58760137/133895544-fbd250f5-4062-43ec-ab43-8b06460c29c5.mov
+
+The app can also catch errors and display them, for example, entering wrong credentials:
+
+
+
+https://user-images.githubusercontent.com/58760137/133896051-ae10fe4e-1eac-460b-8df4-c638a652de42.mov
 
 
 # Available Scripts
+
+Uploading Screen Recording 2021-09-18 at 11.34.43 AM.mov…
+
+
 In the project directory, you can run:
 
 # npm run dev
